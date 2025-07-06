@@ -101,8 +101,8 @@ function addQuote(event) {
   if (text && category) {
     quotes.push({ text, category });
     saveQuotes();
-    populateCategories(); // update category list
-    filterQuotes(); // re-apply current filter
+    populateCategories();
+    filterQuotes();
     alert("Quote added successfully!");
 
     document.getElementById("newQuoteText").value = "";
@@ -167,9 +167,60 @@ function importFromJsonFile(event) {
   reader.readAsText(file);
 }
 
-// Initialize the app
+const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
+
+// Simulate fetching quotes from server
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch(SERVER_URL);
+    const data = await response.json();
+
+    const serverQuotes = data.slice(0, 5).map((item, index) => ({
+      text: item.title,
+      category: `ServerCat${index + 1}`,
+    }));
+
+    let newQuotes = 0;
+    serverQuotes.forEach((serverQuote) => {
+      const exists = quotes.some((q) => q.text === serverQuote.text);
+      if (!exists) {
+        quotes.push(serverQuote);
+        newQuotes++;
+      }
+    });
+
+    if (newQuotes > 0) {
+      saveQuotes();
+      populateCategories();
+      filterQuotes();
+      console.log(`✅ Synced ${newQuotes} new quotes from server.`);
+    } else {
+      console.log("☑️ No new server quotes to sync.");
+    }
+  } catch (error) {
+    console.error("❌ Failed to fetch from server:", error);
+  }
+}
+
+// Simulate pushing quotes to server
+async function pushQuotesToServer() {
+  try {
+    await fetch(SERVER_URL, {
+      method: "POST",
+      body: JSON.stringify(quotes),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    console.log("✅ Local quotes synced to server.");
+  } catch (error) {
+    console.error("❌ Failed to push to server:", error);
+  }
+}
+
+// Initialize app
 loadQuotes();
 populateCategories();
 createAddQuoteForm();
 loadLastViewedQuote();
 newQuoteBtn.addEventListener("click", filterQuotes);
+setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
