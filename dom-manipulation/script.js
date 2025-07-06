@@ -169,7 +169,7 @@ function importFromJsonFile(event) {
 
 const SERVER_URL = "https://jsonplaceholder.typicode.com/posts";
 
-// Simulate fetching quotes from server
+// Simulate fetching quotes from server with conflict resolution
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(SERVER_URL);
@@ -180,22 +180,31 @@ async function fetchQuotesFromServer() {
       category: `ServerCat${index + 1}`,
     }));
 
-    let newQuotes = 0;
+    let updated = 0;
+
     serverQuotes.forEach((serverQuote) => {
-      const exists = quotes.some((q) => q.text === serverQuote.text);
-      if (!exists) {
+      const localIndex = quotes.findIndex((q) => q.text === serverQuote.text);
+
+      if (localIndex !== -1) {
+        // Conflict: overwrite local with server version
+        quotes[localIndex] = serverQuote;
+        updated++;
+      } else {
+        // New quote
         quotes.push(serverQuote);
-        newQuotes++;
+        updated++;
       }
     });
 
-    if (newQuotes > 0) {
+    if (updated > 0) {
       saveQuotes();
       populateCategories();
       filterQuotes();
-      console.log(`✅ Synced ${newQuotes} new quotes from server.`);
+      console.log(
+        `✅ Synced ${updated} quotes from server (server wins conflicts).`
+      );
     } else {
-      console.log("☑️ No new server quotes to sync.");
+      console.log("☑️ No updates from server.");
     }
   } catch (error) {
     console.error("❌ Failed to fetch from server:", error);
@@ -211,16 +220,16 @@ async function pushQuotesToServer() {
       headers: { "Content-Type": "application/json" },
     });
 
-    console.log("✅ Local quotes synced to server.");
+    console.log("✅ Local quotes pushed to server.");
   } catch (error) {
     console.error("❌ Failed to push to server:", error);
   }
 }
 
-// Initialize app
+// Init
 loadQuotes();
 populateCategories();
 createAddQuoteForm();
 loadLastViewedQuote();
 newQuoteBtn.addEventListener("click", filterQuotes);
-setInterval(fetchQuotesFromServer, 30000); // Sync every 30 seconds
+setInterval(fetchQuotesFromServer, 30000); // Sync every 30s
