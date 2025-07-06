@@ -53,7 +53,7 @@ function populateCategories() {
   }
 }
 
-// Show quote based on selected category
+// Filter quotes and show one
 function filterQuotes() {
   const selectedCategory = categoryFilter.value;
   localStorage.setItem("selectedCategory", selectedCategory);
@@ -77,7 +77,7 @@ function filterQuotes() {
   sessionStorage.setItem("lastQuote", JSON.stringify(randomQuote));
 }
 
-// Load last viewed quote from sessionStorage
+// Load last viewed quote
 function loadLastViewedQuote() {
   const lastQuote = sessionStorage.getItem("lastQuote");
   if (lastQuote) {
@@ -87,11 +87,11 @@ function loadLastViewedQuote() {
       <small><em>Category: ${quote.category}</em></small>
     `;
   } else {
-    filterQuotes(); // fallback to show something
+    filterQuotes();
   }
 }
 
-// Add quote from form
+// Add quote and update dropdown
 function addQuote(event) {
   event.preventDefault();
 
@@ -101,8 +101,8 @@ function addQuote(event) {
   if (text && category) {
     quotes.push({ text, category });
     saveQuotes();
-    populateCategories();
-    filterQuotes();
+    populateCategories(); // update category list
+    filterQuotes(); // re-apply current filter
     alert("Quote added successfully!");
 
     document.getElementById("newQuoteText").value = "";
@@ -112,7 +112,7 @@ function addQuote(event) {
   }
 }
 
-// Create Add Quote Form
+// Create the Add Quote Form
 function createAddQuoteForm() {
   const formContainer = document.getElementById("formContainer");
   formContainer.innerHTML = `
@@ -127,7 +127,7 @@ function createAddQuoteForm() {
   document.getElementById("quoteForm").addEventListener("submit", addQuote);
 }
 
-// Export to JSON
+// Export quotes to JSON
 function exportToJsonFile() {
   const dataStr = JSON.stringify(quotes, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
@@ -142,7 +142,7 @@ function exportToJsonFile() {
   URL.revokeObjectURL(url);
 }
 
-// Import from JSON
+// Import quotes from JSON
 function importFromJsonFile(event) {
   const file = event.target.files[0];
   if (!file) return;
